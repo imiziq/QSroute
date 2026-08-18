@@ -1,0 +1,95 @@
+import html
+
+def generate_drawio():
+    # Define Nodes: id, text, x, y, width, height, style
+    nodes = [
+        ("start", "<b>START GAME</b>", 350, 40, 120, 40, "rounded=1;whiteSpace=wrap;html=1;fillColor=#e6e6fa;strokeColor=#4b0082;strokeWidth=2;"),
+        ("avatar", "<b>Select Avatar<br>(Boy or Girl)</b>", 340, 110, 140, 50, "rounded=1;whiteSpace=wrap;html=1;fillColor=#fdfbf7;strokeColor=#333333;strokeWidth=1.5;"),
+        ("init", "<b>Initialize Level<br>(Set Target Multiples)</b>", 330, 190, 160, 50, "rounded=1;whiteSpace=wrap;html=1;fillColor=#fdfbf7;strokeColor=#333333;strokeWidth=1.5;"),
+        ("spawn", "<b>Gameplay Loop:<br>Spawn Numbers & Obstacles</b>", 300, 270, 220, 50, "rounded=1;whiteSpace=wrap;html=1;fillColor=#fdfbf7;strokeColor=#333333;strokeWidth=1.5;"),
+        ("collision", "<b>? Player Collision Event ?</b>", 310, 350, 200, 60, "rhombus;whiteSpace=wrap;html=1;fillColor=#e6f2ff;strokeColor=#0055a4;strokeWidth=2;"),
+        
+        ("correct", "<b>Catches<br>Correct Multiple</b>", 140, 440, 120, 50, "rounded=1;whiteSpace=wrap;html=1;fillColor=#e6ffe6;strokeColor=#008000;strokeWidth=1.5;"),
+        ("wrong", "<b>Catches<br>Wrong Number</b>", 350, 440, 120, 50, "rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6e6;strokeColor=#cc0000;strokeWidth=1.5;"),
+        ("obstacle", "<b>Hits<br>Rock or Bat</b>", 560, 440, 120, 50, "rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6e6;strokeColor=#cc0000;strokeWidth=1.5;"),
+        
+        ("score_up", "<b>+1 Point<br>Play 'DING!'</b>", 140, 520, 120, 50, "rounded=1;whiteSpace=wrap;html=1;fillColor=#e6ffe6;strokeColor=#008000;strokeWidth=1.5;"),
+        ("score_down", "<b>-1 Point</b>", 350, 520, 120, 50, "rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6e6;strokeColor=#cc0000;strokeWidth=1.5;"),
+        ("dizzy", "<b>Avatar Dizzy<br>(2 Seconds)</b>", 560, 520, 120, 50, "rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6e6;strokeColor=#cc0000;strokeWidth=1.5;"),
+        
+        ("check", "<b>? Check Score ?</b>", 330, 600, 160, 60, "rhombus;whiteSpace=wrap;html=1;fillColor=#e6f2ff;strokeColor=#0055a4;strokeWidth=2;"),
+        ("complete", "<b>Level Complete!<br>(Score = 10)</b>", 350, 690, 120, 50, "rounded=1;whiteSpace=wrap;html=1;fillColor=#e6ffe6;strokeColor=#008000;strokeWidth=1.5;"),
+        ("end", "<b>Proceed to Next Level<br>Or Win Screen</b>", 330, 770, 160, 50, "rounded=1;whiteSpace=wrap;html=1;fillColor=#e6e6fa;strokeColor=#4b0082;strokeWidth=2;"),
+        
+        # Free-floating labels
+        ("label_score_10", "<font color=\"#008000\"><b>Score = 10</b></font>", 415, 665, 80, 20, "text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;"),
+        ("label_continue", "<font color=\"#cc0000\"><b>Score &lt; 10<br>(Continue Loop)</b></font>", 85, 450, 120, 40, "text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;"),
+    ]
+    
+    # Define Edges: source_id, target_id, style_options, [optional_waypoints]
+    edges = [
+        ("start", "avatar", ""),
+        ("avatar", "init", ""),
+        ("init", "spawn", ""),
+        ("spawn", "collision", ""),
+        ("collision", "correct", "edgeStyle=orthogonalEdgeStyle;"),
+        ("collision", "wrong", ""),
+        ("collision", "obstacle", "edgeStyle=orthogonalEdgeStyle;"),
+        ("correct", "score_up", ""),
+        ("wrong", "score_down", ""),
+        ("obstacle", "dizzy", ""),
+        ("score_up", "check", "edgeStyle=orthogonalEdgeStyle;"),
+        ("score_down", "check", ""),
+        ("dizzy", "check", "edgeStyle=orthogonalEdgeStyle;"),
+        ("check", "complete", ""),
+        ("complete", "end", ""),
+        # Loop back edge from Check Score to Spawn Numbers
+        ("check", "spawn", "edgeStyle=orthogonalEdgeStyle;exitX=0;exitY=0.5;entryX=0;entryY=0.5;", [(80, 630), (80, 295)]), 
+    ]
+    
+    xml = ['<mxfile host="Electron" modified="2026-08-18T00:00:00.000Z" agent="Mozilla/5.0" version="21.5.0" type="device">']
+    xml.append('  <diagram id="math_explorer" name="Flowchart">')
+    xml.append('    <mxGraphModel dx="1000" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">')
+    xml.append('      <root>')
+    xml.append('        <mxCell id="0" />')
+    xml.append('        <mxCell id="1" parent="0" />')
+    
+    # Render Nodes
+    for i, (nid, text, x, y, w, h, style) in enumerate(nodes):
+        xml.append(f'        <mxCell id="{nid}" value="{html.escape(text)}" style="{style}" vertex="1" parent="1">')
+        xml.append(f'          <mxGeometry x="{x}" y="{y}" width="{w}" height="{h}" as="geometry" />')
+        xml.append(f'        </mxCell>')
+    
+    # Render Edges
+    for i, edge_info in enumerate(edges):
+        src = edge_info[0]
+        tgt = edge_info[1]
+        style = edge_info[2]
+        pts = edge_info[3] if len(edge_info) > 3 else []
+        
+        default_style = "html=1;strokeColor=#333333;strokeWidth=1.5;rounded=0;endArrow=block;endFill=1;"
+        full_style = default_style + style
+        xml.append(f'        <mxCell id="edge_{i}" style="{full_style}" edge="1" parent="1" source="{src}" target="{tgt}">')
+        if not pts:
+            xml.append(f'          <mxGeometry relative="1" as="geometry" />')
+        else:
+            xml.append(f'          <mxGeometry relative="1" as="geometry">')
+            xml.append(f'            <Array as="points">')
+            for (px, py) in pts:
+                xml.append(f'              <mxPoint x="{px}" y="{py}" />')
+            xml.append(f'            </Array>')
+            xml.append(f'          </mxGeometry>')
+        xml.append(f'        </mxCell>')
+        
+    xml.append('      </root>')
+    xml.append('    </mxGraphModel>')
+    xml.append('  </diagram>')
+    xml.append('</mxfile>')
+    
+    return "\n".join(xml)
+
+output_path = "/mnt/data/Math_Explorer_Flowchart.drawio"
+with open(output_path, "w") as f:
+    f.write(generate_drawio())
+
+print(output_path)
